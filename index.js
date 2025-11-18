@@ -1,5 +1,5 @@
 import express from 'express';
-import Hello from "./Hello.js"
+import Hello from "./hello.js"
 import Lab5 from "./Lab5/index.js";
 import cors from "cors";
 import db from "./Kambaz/Database/index.js";
