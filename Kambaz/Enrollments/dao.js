@@ -1,42 +1,39 @@
-import { v4 as uuidv4 } from "uuid";
+import model from "./model.js";
+export default function EnrollmentsDao() {
 
-export default function EnrollmentsDao(db) {
-    function findEnrollmentsForUser(userId) {
-        return db.enrollments.filter((e) => e.user === userId);
+    async function findCoursesForUser(userId) {
+        console.log("findCoursesForUser → userId =", userId);
+        const enrollments = await model.find({ user: userId }).populate("course");
+        console.log("findCoursesForUser → enrollments =", enrollments);
+        return enrollments.map(e => e.course);
+    }
+
+    async function findUsersForCourse(courseId) {
+        console.log("findUserseForCourse -> courseId = ", courseId, "")
+        const enrollments = await model.find({ course: courseId }).populate("user");
+        return enrollments.map((enrollment) => enrollment.user);
     }
 
     function enrollUserInCourse(userId, courseId) {
-        const { enrollments } = db;
-
-        // avoid duplicate enrollment
-        const existing = enrollments.find(
-            (e) => e.user === userId && e.course === courseId,
-        );
-        if (existing) return existing;
-
-        const enrollment = {
-            _id: uuidv4(),
+        return model.create({
             user: userId,
             course: courseId,
-        };
-        db.enrollments = [...enrollments, enrollment];
-        return enrollment;
+            _id: `${userId}-${courseId}`,
+        });
+    }
+    function unenrollUserFromCourse(user, course) {
+        return model.deleteOne({ user, course });
     }
 
-    function unenrollUserFromCourse(userId, courseId) {
-        const { enrollments } = db;
-        const toRemove = enrollments.find(
-            (e) => e.user === userId && e.course === courseId,
-        );
-        db.enrollments = enrollments.filter(
-            (e) => !(e.user === userId && e.course === courseId),
-        );
-        return toRemove || null;
+    function unenrollAllUsersFromCourse(courseId) {
+        return model.deleteMany({ course: courseId });
     }
 
     return {
-        findEnrollmentsForUser,
+        findCoursesForUser,
+        findUsersForCourse,
         enrollUserInCourse,
         unenrollUserFromCourse,
+        unenrollAllUsersFromCourse
     };
 }

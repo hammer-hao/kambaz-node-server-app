@@ -1,54 +1,68 @@
 import AssignmentsDao from "./dao.js";
 
-export default function AssignmentsRoutes(app, db) {
-    const dao = AssignmentsDao(db);
+export default function AssignmentsRoutes(app) {
+    const dao = AssignmentsDao();
 
-    const createAssignment = (req, res) => {
-        const { courseId } = req.params;
-        const newAssignment = dao.createAssignment(courseId, req.body);
-        res.json(newAssignment);
-    };
-    app.post("/courses/:courseId/assignments", createAssignment);
-
-    const findAllAssignments = (req, res) => {
-        const assignments = dao.findAllAssignments();
-        res.json(assignments);
-    };
-    app.get("/assignments", findAllAssignments);
-
-    const findAssignmentsForCourse = (req, res) => {
-        const { courseId } = req.params;
-        const assignments = dao.findAssignmentsForCourse(courseId);
-        res.json(assignments);
-    };
-    app.get("/courses/:courseId/assignments", findAssignmentsForCourse);
-
-    const findAssignmentById = (req, res) => {
-        const { assignmentId } = req.params;
-        const assignment = dao.findAssignmentById(assignmentId);
-        if (!assignment) {
-            res.sendStatus(404);
-            return;
+    app.get("/api/courses/:cid/assignments", async (req, res) => {
+        try {
+            const { cid } = req.params;
+            const assignments = await dao.findAssignmentsForCourse(cid);
+            res.json(assignments);
+        } catch (e) {
+            console.error("Error in GET /api/courses/:cid/assignments", e);
+            res.sendStatus(500);
         }
-        res.json(assignment);
-    };
-    app.get("/assignments/:assignmentId", findAssignmentById);
+    });
 
-    const updateAssignment = (req, res) => {
-        const { assignmentId } = req.params;
-        const updatedAssignment = dao.updateAssignment(assignmentId, req.body);
-        if (!updatedAssignment) {
-            res.sendStatus(404);
-            return;
+    app.get("/api/assignments/:aid", async (req, res) => {
+        try {
+            const { aid } = req.params;
+            const assignment = await dao.findAssignmentById(aid);
+            if (!assignment) {
+                return res.sendStatus(404);
+            }
+            res.json(assignment);
+        } catch (e) {
+            console.error("Error in GET /api/assignments/:aid", e);
+            res.sendStatus(500);
         }
-        res.json(updatedAssignment);
-    };
-    app.put("/assignments/:assignmentId", updateAssignment);
+    });
 
-    const deleteAssignment = (req, res) => {
-        const { assignmentId } = req.params;
-        dao.deleteAssignment(assignmentId);
-        res.sendStatus(200);
-    };
-    app.delete("/assignments/:assignmentId", deleteAssignment);
+    app.post("/api/courses/:cid/assignments", async (req, res) => {
+        try {
+            const { cid } = req.params;
+            const assignment = req.body;
+            const created = await dao.createAssignment(cid, assignment);
+            res.json(created);
+        } catch (e) {
+            console.error("Error in POST /api/courses/:cid/assignments", e);
+            res.sendStatus(500);
+        }
+    });
+
+    app.put("/api/assignments/:aid", async (req, res) => {
+        try {
+            const { aid } = req.params;
+            const assignmentUpdates = req.body;
+            const updated = await dao.updateAssignment(aid, assignmentUpdates);
+            if (!updated) {
+                return res.sendStatus(404);
+            }
+            res.json(updated);
+        } catch (e) {
+            console.error("Error in PUT /api/assignments/:aid", e);
+            res.sendStatus(500);
+        }
+    });
+
+    app.delete("/api/assignments/:aid", async (req, res) => {
+        try {
+            const { aid } = req.params;
+            const status = await dao.deleteAssignment(aid);
+            res.json(status);
+        } catch (e) {
+            console.error("Error in DELETE /api/assignments/:aid", e);
+            res.sendStatus(500);
+        }
+    });
 }

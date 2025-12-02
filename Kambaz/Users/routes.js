@@ -1,7 +1,9 @@
 import UsersDao from "./dao.js";
+import EnrollmentsDao from "../Enrollments/dao.js";
 
 export default function UserRoutes(app) {
     const dao = UsersDao();
+    const enrollmentsDao = EnrollmentsDao();
     const createUser = async (req, res) => {
         const user = await dao.createUser(req.body);
         res.json(user);
@@ -55,32 +57,43 @@ export default function UserRoutes(app) {
         req.session["currentUser"] = currentUser;
         res.json(currentUser);
     };
-    const signin = async (req, res) => {
-        const { username, password } = req.body;
-        const currentUser = await dao.findUserByCredentials(username, password);
-        if (currentUser) {
-            req.session["currentUser"] = currentUser;
-            res.json(currentUser);
-        } else {
-            res.status(401).json({ message: "Unable to login. Try again later." });
-        }
-    };
     const signout = (req, res) => {
         req.session.destroy();
         res.sendStatus(200);
     };
+
+    const signin = async (req, res) => {
+        const { username, password } = req.body;
+        const currentUser = await dao.findUserByCredentials(username, password);
+        console.log("SIGNIN body:", req.body);
+        console.log("SIGNIN user:", currentUser);
+        console.log("SIGNIN session BEFORE:", req.session);
+
+        if (currentUser) {
+            req.session["currentUser"] = currentUser;
+            console.log("SIGNIN session AFTER:", req.session);
+            res.json(currentUser);
+        } else {
+            console.log("SIGNIN 401");
+            res.status(401).json({ message: "Unable to login. Try again later." });
+        }
+    };
+
     const profile = (req, res) => {
+        console.log("PROFILE headers.cookie:", req.headers.cookie);
+        console.log("PROFILE session:", req.session);
         const currentUser = req.session["currentUser"];
         if (!currentUser) {
+            console.log("PROFILE 401 – no currentUser in session");
             res.sendStatus(401);
             return;
         }
         res.json(currentUser);
     };
 
-    const findUsersForCourse = (req, res) => {
+    const findUsersForCourse = async (req, res) => {
         const { courseId } = req.params;
-        const users = dao.findUsersForCourse(courseId);
+        const users = await enrollmentsDao.findUsersForCourse(courseId);
         res.json(users);
     };
     app.get("/api/courses/:courseId/users", findUsersForCourse);

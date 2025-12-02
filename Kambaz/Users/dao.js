@@ -18,18 +18,6 @@ export default function UsersDao() {
             $or: [{ firstName: { $regex: regex } }, { lastName: { $regex: regex } }],
         });
     };
-
-
-    // function findUsersForCourse(courseId) {
-    //     const { users, enrollments } = db;
-    //     return users.filter((user) =>
-    //         enrollments.some(
-    //             (enrollment) =>
-    //                 enrollment.user === user._id && enrollment.course === courseId
-    //         )
-    //     );
-    // }
-
     return {
         createUser, findAllUsers, findUserById, findUserByUsername, findUserByCredentials, updateUser, deleteUser, findUsersByRole, findUsersByPartialName };
 }
