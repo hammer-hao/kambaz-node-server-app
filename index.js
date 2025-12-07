@@ -18,6 +18,9 @@ const CONNECTION_STRING = process.env.DATABASE_CONNECTION_STRING || "mongodb://1
 await mongoose.connect(CONNECTION_STRING);
 
 const app = express();
+
+app.set("trust proxy", 1);
+
 app.use(
     cors({
         credentials: true,
